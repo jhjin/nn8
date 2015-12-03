@@ -14,5 +14,6 @@ luarocks make rocks/nn8-scm-1.rockspec
 ### Test
 
 ```bash
-th test.lua
+th test-precision.lua   # small model
+th test-speed.lua       # large model
 ```
