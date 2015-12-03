@@ -5,7 +5,7 @@ and only supports few modules.
 
 ### Install
 
-```lua
+```bash
 git clone https://github.com/jhjin/nn8 --recursive
 cd nn8
 luarocks make rocks/nn8-scm-1.rockspec
@@ -13,6 +13,6 @@ luarocks make rocks/nn8-scm-1.rockspec
 
 ### Test
 
-```lua
+```bash
 th test.lua
 ```
