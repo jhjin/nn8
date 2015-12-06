@@ -13,17 +13,17 @@ local iW = iH
 
 -- alex krizhevsky one weird trick (http://arxiv.org/abs/1404.5997)
 local model32 = nn.Sequential()
-model32:add(nn.SpatialConvolution(3,64,11,11,4,4,2,2))
+model32:add(nn.SpatialConvolutionMM(3,64,11,11,4,4,2,2))
 model32:add(nn.Threshold(10, 10))
 model32:add(nn.SpatialMaxPooling(3,3,2,2))
-model32:add(nn.SpatialConvolution(64,192,5,5,1,1,2,2))
+model32:add(nn.SpatialConvolutionMM(64,192,5,5,1,1,2,2))
 model32:add(nn.Threshold(10, 10))
 model32:add(nn.SpatialMaxPooling(3,3,2,2))
-model32:add(nn.SpatialConvolution(192,384,3,3,1,1,1,1))
+model32:add(nn.SpatialConvolutionMM(192,384,3,3,1,1,1,1))
 model32:add(nn.Threshold(10, 10))
-model32:add(nn.SpatialConvolution(384,256,3,3,1,1,1,1))
+model32:add(nn.SpatialConvolutionMM(384,256,3,3,1,1,1,1))
 model32:add(nn.Threshold(10, 10))
-model32:add(nn.SpatialConvolution(256,256,3,3,1,1,1,1))
+model32:add(nn.SpatialConvolutionMM(256,256,3,3,1,1,1,1))
 model32:add(nn.Threshold(10, 10))
 model32:add(nn.SpatialMaxPooling(3,3,2,2))
 model32:add(nn.View(256*6*6))
@@ -36,6 +36,11 @@ model32:add(nn.Threshold(10, 10))
 model32:add(nn.Linear(4096, 1000))
 model32:add(nn.SoftMax())
 ]]
+
+for _, v in pairs({1,4,7,9,11}) do
+   model32:get(v).weight:random(3):add(-1)
+   model32:get(v).bias:random(3):add(-1)
+end
 
 
 local model8 = nn.Sequential()
@@ -57,7 +62,3 @@ print('==> 32-bit: ', t32:time().real)
 local t8  = torch.Timer()
 local y8  = model8:forward(x8)
 print('==>  8-bit: ', t8:time().real)
-
-
-local diff = (y32 - y8:float()):abs()
-print('==> diff [max]: ', diff:max(), 'due to overflow')
