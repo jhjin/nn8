@@ -1,9 +1,6 @@
 require('torch')
 require('nn')
-require('libnn8')
-
-include('transform.lua')
-
+require('THNN')
 
 -- temporary support for byte copy for nn.Module class
 function nn.Module:byte()

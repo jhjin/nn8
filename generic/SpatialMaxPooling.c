@@ -1,4 +1,4 @@
-static void nn8_ByteSpatialMaxPooling_updateOutput_frame(uint8_t *input_p, uint8_t *output_p,
+static void THNN_ByteSpatialMaxPooling_updateOutput_frame(uint8_t *input_p, uint8_t *output_p,
                                                          uint8_t *ind_p,
                                                          long nslices,
                                                          long iwidth, long iheight,
@@ -57,18 +57,19 @@ static void nn8_ByteSpatialMaxPooling_updateOutput_frame(uint8_t *input_p, uint8
   }
 }
 
-static int nn8_ByteSpatialMaxPooling_updateOutput(lua_State *L)
+void THNN_ByteSpatialMaxPooling_updateOutput(
+          THNNState *state,
+          THByteTensor *input,
+          THByteTensor *output,
+          THByteTensor *indices,
+          int kW,
+          int kH,
+          int dW,
+          int dH,
+          int padW,
+          int padH,
+          bool ceil_mode)
 {
-  THByteTensor *input = luaT_checkudata(L, 2, "torch.ByteTensor");
-  int kW = luaT_getfieldcheckint(L, 1, "kW");
-  int kH = luaT_getfieldcheckint(L, 1, "kH");
-  int dW = luaT_getfieldcheckint(L, 1, "dW");
-  int dH = luaT_getfieldcheckint(L, 1, "dH");
-  int padW = luaT_getfieldcheckint(L, 1, "padW");
-  int padH = luaT_getfieldcheckint(L, 1, "padH");
-  int ceil_mode = luaT_getfieldcheckboolean(L,1,"ceil_mode");
-  THByteTensor *indices = luaT_getfieldcheckudata(L, 1, "indices", "torch.ByteTensor");
-  THByteTensor *output = luaT_getfieldcheckudata(L, 1, "output", "torch.ByteTensor");
   int dimw = 2;
   int dimh = 1;
   long nbatch = 1;
@@ -82,7 +83,7 @@ static int nn8_ByteSpatialMaxPooling_updateOutput(lua_State *L)
   uint8_t *indices_data;
 
 
-  luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4 , 2, "3D or 4D (batch mode) tensor expected");
+  THArgCheck(input->nDimension == 3 || input->nDimension == 4 , 2, "3D or 4D (batch mode) tensor expected");
 
   if (input->nDimension == 4)
   {
@@ -90,9 +91,9 @@ static int nn8_ByteSpatialMaxPooling_updateOutput(lua_State *L)
     dimw++;
     dimh++;
   }
-  luaL_argcheck(L, input->size[dimw] >= kW - padW && input->size[dimh] >= kH - padH, 2, "input image smaller than kernel size");
+  THArgCheck(input->size[dimw] >= kW - padW && input->size[dimh] >= kH - padH, 2, "input image smaller than kernel size");
 
-  luaL_argcheck(L, kW/2 >= padW && kH/2 >= padH, 2, "pad should be smaller than half of kernel size");
+  THArgCheck(kW/2 >= padW && kH/2 >= padH, 2, "pad should be smaller than half of kernel size");
 
   /* sizes */
   nslices = input->size[dimh-1];
@@ -132,7 +133,7 @@ static int nn8_ByteSpatialMaxPooling_updateOutput(lua_State *L)
     output_data = THByteTensor_data(output);
     indices_data = THByteTensor_data(indices);
 
-    nn8_ByteSpatialMaxPooling_updateOutput_frame(input_data, output_data,
+    THNN_ByteSpatialMaxPooling_updateOutput_frame(input_data, output_data,
                                                  indices_data,
                                                  nslices,
                                                  iwidth, iheight,
@@ -155,7 +156,7 @@ static int nn8_ByteSpatialMaxPooling_updateOutput(lua_State *L)
 #pragma omp parallel for private(p)
     for (p = 0; p < nbatch; p++)
     {
-      nn8_ByteSpatialMaxPooling_updateOutput_frame(input_data+p*nslices*iwidth*iheight, output_data+p*nslices*owidth*oheight,
+      THNN_ByteSpatialMaxPooling_updateOutput_frame(input_data+p*nslices*iwidth*iheight, output_data+p*nslices*owidth*oheight,
                                                    indices_data+p*nslices*owidth*oheight,
                                                    nslices,
                                                    iwidth, iheight,
@@ -167,17 +168,4 @@ static int nn8_ByteSpatialMaxPooling_updateOutput(lua_State *L)
 
   /* cleanup */
   THByteTensor_free(input);
-  return 1;
-}
-
-static const struct luaL_Reg nn8_ByteSpatialMaxPooling__ [] = {
-  {"SpatialMaxPooling_updateOutput", nn8_ByteSpatialMaxPooling_updateOutput},
-  {NULL, NULL}
-};
-
-static void nn8_ByteSpatialMaxPooling_init(lua_State *L)
-{
-  luaT_pushmetatable(L, "torch.ByteTensor");
-  luaT_registeratname(L, nn8_ByteSpatialMaxPooling__, "nn");
-  lua_pop(L,1);
 }

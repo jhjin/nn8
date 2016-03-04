@@ -1,4 +1,7 @@
-static void nn8_Byteunfolded_copy(THByteTensor *finput, THByteTensor *input,
+#ifndef TH_GENERIC_FILE
+#define TH_GENERIC_FILE "generic/SpatialConvolutionMM.c"
+
+void THNN_Byteunfolded_copy(THByteTensor *finput, THByteTensor *input,
                                   int kW, int kH,
                                   int dW, int dH,
                                   int padW, int padH,
@@ -65,7 +68,7 @@ static void nn8_Byteunfolded_copy(THByteTensor *finput, THByteTensor *input,
   }
 }
 
-static void nn8_ByteSpatialConvolutionMM_updateOutput_frame(THByteTensor *input, THByteTensor *output,
+static void THNN_ByteSpatialConvolutionMM_updateOutput_frame(THByteTensor *input, THByteTensor *output,
                                                             THByteTensor *weight, THByteTensor *bias, THByteTensor *finput,
                                                             int kW, int kH, int dW, int dH, int padW, int padH,
                                                             long nInputPlane, long inputWidth, long inputHeight,
@@ -74,7 +77,7 @@ static void nn8_ByteSpatialConvolutionMM_updateOutput_frame(THByteTensor *input,
   long i;
   THByteTensor *output2d;
 
-  nn8_Byteunfolded_copy(finput, input, kW, kH, dW, dH, padW, padH,
+  THNN_Byteunfolded_copy(finput, input, kW, kH, dW, dH, padW, padH,
                         nInputPlane, inputWidth, inputHeight, outputWidth, outputHeight);
 
   output2d = THByteTensor_newWithStorage2d(output->storage, output->storageOffset,
@@ -90,21 +93,21 @@ static void nn8_ByteSpatialConvolutionMM_updateOutput_frame(THByteTensor *input,
   THByteTensor_free(output2d);
 }
 
-static int nn8_ByteSpatialConvolutionMM_updateOutput(lua_State *L)
+void THNN_ByteSpatialConvolutionMM_updateOutput(
+          THNNState *state,
+          THByteTensor *input,
+          THByteTensor *output,
+          THByteTensor *weight,
+          THByteTensor *bias,
+          THByteTensor *finput,
+          THByteTensor *fgradInput,
+          int kW,
+          int kH,
+          int dW,
+          int dH,
+          int padW,
+          int padH)
 {
-  THByteTensor *input = luaT_checkudata(L, 2, "torch.ByteTensor");
-  int kW = luaT_getfieldcheckint(L, 1, "kW");
-  int kH = luaT_getfieldcheckint(L, 1, "kH");
-  int dW = luaT_getfieldcheckint(L, 1, "dW");
-  int dH = luaT_getfieldcheckint(L, 1, "dH");
-  int padW = luaT_getfieldcheckint(L, 1, "padW");
-  int padH = luaT_getfieldcheckint(L, 1, "padH");
-
-  THByteTensor *finput = luaT_getfieldcheckudata(L, 1, "finput", "torch.ByteTensor");
-  THByteTensor *weight = luaT_getfieldcheckudata(L, 1, "weight", "torch.ByteTensor");
-  THByteTensor *bias = luaT_getfieldcheckudata(L, 1, "bias", "torch.ByteTensor");
-  THByteTensor *output = luaT_getfieldcheckudata(L, 1, "output", "torch.ByteTensor");
-
   int dimf = 0;
   int dimw = 2;
   int dimh = 1;
@@ -116,7 +119,7 @@ static int nn8_ByteSpatialConvolutionMM_updateOutput(lua_State *L)
   long outputWidth;
   long outputHeight;
 
-  luaL_argcheck(L, input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
+  THArgCheck(input->nDimension == 3 || input->nDimension == 4, 2, "3D or 4D(batch mode) tensor expected");
 
 
   if (input->nDimension == 4) {
@@ -141,7 +144,7 @@ static int nn8_ByteSpatialConvolutionMM_updateOutput(lua_State *L)
     THByteTensor_resize2d(finput, kW*kH*nInputPlane, outputHeight*outputWidth);
     THByteTensor_resize3d(output, nOutputPlane, outputHeight, outputWidth);
 
-    nn8_ByteSpatialConvolutionMM_updateOutput_frame(input, output, weight, bias, finput,
+    THNN_ByteSpatialConvolutionMM_updateOutput_frame(input, output, weight, bias, finput,
                                                     kW, kH, dW, dH, padW, padH,
                                                     nInputPlane, inputWidth, inputHeight,
                                                     nOutputPlane, outputWidth, outputHeight);
@@ -161,7 +164,7 @@ static int nn8_ByteSpatialConvolutionMM_updateOutput(lua_State *L)
       THByteTensor *output_t = THByteTensor_newSelect(output, 0, t);
       THByteTensor *finput_t = THByteTensor_newSelect(finput, 0, t);
 
-      nn8_ByteSpatialConvolutionMM_updateOutput_frame(input_t, output_t, weight, bias, finput_t,
+      THNN_ByteSpatialConvolutionMM_updateOutput_frame(input_t, output_t, weight, bias, finput_t,
                                                       kW, kH, dW, dH, padW, padH,
                                                       nInputPlane, inputWidth, inputHeight,
                                                       nOutputPlane, outputWidth, outputHeight);
@@ -171,18 +174,6 @@ static int nn8_ByteSpatialConvolutionMM_updateOutput(lua_State *L)
       THByteTensor_free(finput_t);
     }
   }
-
-  return 1;
 }
 
-static const struct luaL_Reg nn8_ByteSpatialConvolutionMM__ [] = {
-  {"SpatialConvolutionMM_updateOutput", nn8_ByteSpatialConvolutionMM_updateOutput},
-  {NULL, NULL}
-};
-
-static void nn8_ByteSpatialConvolutionMM_init(lua_State *L)
-{
-  luaT_pushmetatable(L, "torch.ByteTensor");
-  luaT_registeratname(L, nn8_ByteSpatialConvolutionMM__, "nn");
-  lua_pop(L,1);
-}
+#endif
