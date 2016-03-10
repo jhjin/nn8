@@ -15,53 +15,53 @@ void THNN_Byteunfolded_copy(THByteTensor *finput, THByteTensor *input,
 
 #pragma omp parallel for private(k)
   for(k = 0; k < nInputPlane*kH*kW; k++) {
-    size_t nip = k / (kH*kW);
-    size_t rest = k % (kH*kW);
-    size_t kh = rest / kW;
-    size_t kw = rest % kW;
-    size_t x,y;
-    long long ix,iy;
+    long nip = k / (kH*kW);
+    long rest = k % (kH*kW);
+    long kh = rest / kW;
+    long kw = rest % kW;
+    long x,y;
+    long ix,iy;
     uint8_t *dst = finput_data + nip*(kH*kW*outputHeight*outputWidth) + kh*(kW*outputHeight*outputWidth) + kw*(outputHeight*outputWidth);
     uint8_t *src = input_data + nip*(inputHeight*inputWidth);
     if (padW > 0 || padH > 0) {
-      size_t lpad,rpad;
+      long lpad,rpad;
       for(y = 0; y < outputHeight; y++) {
-        iy = (long long)(y*dH - padH + kh);
+        iy = (y*dH - padH + kh);
         if (iy < 0 || iy >= inputHeight) {
           memset(dst+y*outputWidth, 0, sizeof(uint8_t)*outputWidth);
         } else {
           if (dW==1){
-             ix = (long long)(0 - padW + kw);
+             ix = (0 - padW + kw);
              lpad = fmaxf(0,padW-kw);
              rpad = fmaxf(0,padW-(kW-kw-1));
              if (outputWidth-rpad-lpad <= 0) {
-                memset(dst+(size_t)(y*outputWidth), 0, sizeof(uint8_t)*outputWidth);
+                memset(dst+(y*outputWidth), 0, sizeof(uint8_t)*outputWidth);
              } else {
                 if (lpad > 0) memset(dst+y*outputWidth, 0, sizeof(uint8_t)*lpad);
-                memcpy(dst+(size_t)(y*outputWidth+lpad), src+(size_t)(iy*inputWidth+ix+lpad), sizeof(uint8_t)*(outputWidth-rpad-lpad));
+                memcpy(dst+(y*outputWidth+lpad), src+(iy*inputWidth+ix+lpad), sizeof(uint8_t)*(outputWidth-rpad-lpad));
                 if (rpad > 0) memset(dst+y*outputWidth + outputWidth - rpad, 0, sizeof(uint8_t)*rpad);
              }
           }
           else{
             for (x=0; x<outputWidth; x++){
-               ix = (long long)(x*dW - padW + kw);
+               ix = (x*dW - padW + kw);
                if (ix < 0 || ix >= inputWidth)
-                 memset(dst+(size_t)(y*outputWidth+x), 0, sizeof(uint8_t)*1);
+                 memset(dst+(y*outputWidth+x), 0, sizeof(uint8_t)*1);
                else
-                 memcpy(dst+(size_t)(y*outputWidth+x), src+(size_t)(iy*inputWidth+ix), sizeof(uint8_t)*(1));
+                 memcpy(dst+(y*outputWidth+x), src+(iy*inputWidth+ix), sizeof(uint8_t)*(1));
             }
           }
         }
       }
     } else {
       for(y = 0; y < outputHeight; y++) {
-        iy = (long long)(y*dH + kh);
-        ix = (long long)(0 + kw);
+        iy = (y*dH + kh);
+        ix = (0 + kw);
         if (dW == 1)
-           memcpy(dst+(size_t)(y*outputWidth), src+(size_t)(iy*inputWidth+ix), sizeof(uint8_t)*outputWidth);
+           memcpy(dst+(y*outputWidth), src+(iy*inputWidth+ix), sizeof(uint8_t)*outputWidth);
         else{
           for (x=0; x<outputWidth; x++)
-             memcpy(dst+(size_t)(y*outputWidth+x), src+(size_t)(iy*inputWidth+ix+x*dW), sizeof(uint8_t)*(1));
+             memcpy(dst+(y*outputWidth+x), src+(iy*inputWidth+ix+x*dW), sizeof(uint8_t)*(1));
          }
       }
     }
