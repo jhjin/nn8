@@ -5,7 +5,9 @@ FIND_PACKAGE(Torch REQUIRED)
 
 # gemmlowp requires c++11
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm.*")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon")
+endif()
 # Flags
 # When using MSVC
 IF(MSVC)

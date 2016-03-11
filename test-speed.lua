@@ -5,7 +5,7 @@ torch.setnumthreads(4)
 print('==> #threads: ', torch.getnumthreads())
 
 
-local batchSize = 128
+local batchSize = 64
 local iC = 3
 local iH = 224
 local iW = iH
