@@ -39,7 +39,7 @@ TH_API void THNN_ByteSpatialMaxPooling_updateOutput(
           int padW, int padH,
           bool ceil_mode);
 
-#include "lib/qgemm_wrapper.h"
+#include "lib/qgemm.h"
 
 #include "lib/tensor.c"
 #include "lib/vector.c"

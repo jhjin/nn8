@@ -46,7 +46,7 @@ ENDIF (WITH_OPENMP)
 
 LINK_DIRECTORIES("${Torch_INSTALL_LIB}")
 
-SET(src init.c lib/qgemm_wrapper.cpp lib/qgemm.cpp lib/gemmlowp/eight_bit_int_gemm/eight_bit_int_gemm.cc)
+SET(src init.c lib/qgemm.cpp lib/gemmlowp/eight_bit_int_gemm/eight_bit_int_gemm.cc)
 
 FILE(GLOB luasrc *.lua)
 
