@@ -84,11 +84,13 @@ static void THNN_ByteSpatialConvolutionMM_updateOutput_frame(THByteTensor *input
                                            nOutputPlane, -1,
                                            outputHeight*outputWidth, -1);
 
-  THByteTensor_mm8(output2d, weight, finput, 0, 0, 0, 1, 0);
-
-  for(i = 0; i < nOutputPlane; i++)
-    THByteVector_cadd8(output->storage->data+output->storageOffset+output->stride[0]*i,
-                      THByteTensor_get1d(bias, i), outputHeight*outputWidth);
+  // gemmlowp considers weight/bias altogether
+  THByteBlas_gemm8(THByteTensor_data(output2d),
+                   THByteTensor_data(bias),
+                   THByteTensor_data(weight),
+                   THByteTensor_data(finput),
+                   weight->size[0], finput->size[1], weight->size[1],
+                   0, 0, 0, 1, 0, 0);
 
   THByteTensor_free(output2d);
 }

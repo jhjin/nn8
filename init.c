@@ -41,9 +41,6 @@ TH_API void THNN_ByteSpatialMaxPooling_updateOutput(
 
 #include "lib/qgemm.h"
 
-#include "lib/tensor.c"
-#include "lib/vector.c"
-
 #include "generic/Threshold.c"
 #include "generic/SpatialConvolutionMM.c"
 #include "generic/SpatialMaxPooling.c"
